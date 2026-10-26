@@ -207,6 +207,24 @@ function CounterScreen() {
   );
 }
 
+/** One piece of state and one button: the smallest interactive screen. */
+function TapsScreen() {
+  const [taps, setTaps] = useState(0);
+  return (
+    <VStack spacing={8}>
+      <Text size={40} bold monospacedDigit>
+        {taps}
+      </Text>
+      <Button onPress={() => setTaps((t) => t + 1)}>
+        <Text>Tap me</Text>
+      </Button>
+      <Text size={11} color="secondary">
+        {taps === 1 ? "1 tap" : `${taps} taps`}
+      </Text>
+    </VStack>
+  );
+}
+
 /**
  * Drives the hydration complication: every change updates the shared
  * store and republishes all widget timelines (App Group storage +
@@ -1201,11 +1219,14 @@ function DemoNavigation() {
 
   return (
     <NavigationStack path={path} onPathChange={setPath}>
-      <NavigationRoute path="/" title="React Watch">
+      <NavigationRoute path="/" title="My Fork">
         <HomeScreen />
       </NavigationRoute>
       <NavigationRoute path="/counter" title="Counter">
         <CounterScreen />
+      </NavigationRoute>
+      <NavigationRoute path="/taps" title="Taps">
+        <TapsScreen />
       </NavigationRoute>
       <NavigationRoute path="/lists" title="Shopping">
         <ListsScreen />
@@ -1259,7 +1280,18 @@ function DemoNavigation() {
 function HomeScreen() {
   return (
     <List>
-      <NavigationLink to="/counter" label="Counter" />
+      <NavigationLink to="/taps" accessibilityLabel="Taps">
+        <HStack spacing={4}>
+          <Image systemName="hand.tap.fill" color="green" />
+          <Text>Taps</Text>
+        </HStack>
+      </NavigationLink>
+      <NavigationLink to="/counter" accessibilityLabel="Counter">
+        <HStack spacing={4}>
+          <Image systemName="star.fill" color="yellow" />
+          <Text>Counter</Text>
+        </HStack>
+      </NavigationLink>
       <NavigationLink to="/lists" label="Shopping" />
       <NavigationLink to="/hydration" accessibilityLabel="Hydration">
         <HStack spacing={4}>
