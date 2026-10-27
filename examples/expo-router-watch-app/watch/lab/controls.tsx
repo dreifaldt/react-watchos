@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import {
+  Button,
   DatePicker,
   List,
   Picker,
@@ -92,6 +93,11 @@ export default function ControlsLab() {
           }
         }}
       />
+      {/* The controlled direction: JS moves the value, the picker follows
+          without echoing a change back. */}
+      <Button onPress={() => setTime((t) => t + 3_600_000)}>
+        <Text size={12}>Time +1 h from JS</Text>
+      </Button>
       <Text size={11} color="secondary">
         {`${on ? "on" : "off"} · slider ${slider} · ${FRUITS[fruit] ?? "?"} · ${clock(time)}`}
       </Text>
