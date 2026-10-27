@@ -1,0 +1,40 @@
+{
+  "name": "expo-router-watch-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Expo Router on the phone (app/) and file-based watch routes (watch/) side by side",
+  "main": "expo-router/entry",
+  "scripts": {
+    "build:watch": "react-watchos build --routes watch --asset targets/watch/assets/bundle.js",
+    "dev:watch": "react-watchos dev --routes watch",
+    "run:watch": "bash scripts/run-watch-sim.sh",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "prebuild": "pnpm build:watch && expo prebuild -p ios --clean"
+  },
+  "dependencies": {
+    "@bacons/apple-targets": "^5.0.0",
+    "@expo/config-plugins": "~57.0.9",
+    "expo": "~57.0.25",
+    "expo-constants": "~57.0.19",
+    "expo-linking": "~57.0.11",
+    "expo-router": "~57.0.23",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-reconciler": "0.33.0",
+    "react-watchos": "workspace:*"
+  },
+  "devDependencies": {
+    "@babel/core": "^8.0.6",
+    "@babel/preset-react": "^8.0.1",
+    "@babel/preset-typescript": "^8.0.1",
+    "@types/node": "^24.19.0",
+    "@types/react": "~19.2.0",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "esbuild": "^0.28.2",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.2"
+  }
+}

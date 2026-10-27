@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Router Watch App",
+    "slug": "expo-router-watch-app",
+    "version": "0.1.0",
+    "scheme": "routerwatch",
+    "platforms": ["ios"],
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.example.routerwatch",
+      "supportsTablet": false
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "react-watchos",
+        {
+          "name": "Router Watch",
+          "widget": false,
+          "healthKit": false,
+          "deploymentTarget": "10.0",
+          "localNetworking": true
+        }
+      ]
+    ]
+  }
+}

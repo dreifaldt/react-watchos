@@ -32,12 +32,22 @@
 # Usage:  pnpm --filter react-watchos run:watch [SIM_UDID]
 #   SIM_UDID optional; defaults to the first booted watchOS sim, else the first
 #   available one (which it boots).
+#
+# Another app in this repo (an example) reuses the script by overriding, from
+# the environment: APP_DIR (its Expo project), WORKSPACE, SCHEME, BUNDLE_ID,
+# WATCH_PRODUCT / WIDGET_PRODUCT (the target product names prebuild uses under
+# ios/.targets/) and JS_BUILD (the command that writes its watch bundle). The
+# defaults are the demo's.
 set -euo pipefail
 cd "$(dirname "$0")/.."          # js/
 ROOT=$(cd .. && pwd)             # project root
-WORKSPACE="$ROOT/app/ios/ReactWatchDemo.xcworkspace"
-SCHEME="React Watch"
-BUNDLE_ID="com.emindeniz99.reactwatch.watch"
+APP_DIR=${APP_DIR:-$ROOT/app}
+WORKSPACE=${WORKSPACE:-$APP_DIR/ios/ReactWatchDemo.xcworkspace}
+SCHEME=${SCHEME:-React Watch}
+BUNDLE_ID=${BUNDLE_ID:-com.emindeniz99.reactwatch.watch}
+WATCH_PRODUCT=${WATCH_PRODUCT:-ReactWatch}
+WIDGET_PRODUCT=${WIDGET_PRODUCT:-ReactWatchWidgets}
+JS_BUILD=${JS_BUILD:-node --experimental-strip-types scripts/build.ts}
 
 # 0) Node-floor guard + .xcode.env.local re-pin (2026-08-06). Two traps, same
 #    root: the typed .cts tooling needs Node's native type stripping (>=22.18).
@@ -57,14 +67,15 @@ if (maj<22 || (maj===22 && min<18)) {
     + `(.mise.toml pins 24). Run via mise, e.g. PATH="$(mise where node)/bin:$PATH" pnpm run:watch`);
   process.exit(1);
 }'
-if [ -d "$ROOT/app/ios" ]; then
-  printf 'export NODE_BINARY=%s\n' "$(command -v node)" > "$ROOT/app/ios/.xcode.env.local"
-  echo "==> Pinned app/ios/.xcode.env.local to $(command -v node) ($(node --version))"
+if [ -d "$APP_DIR/ios" ]; then
+  printf 'export NODE_BINARY=%s\n' "$(command -v node)" > "$APP_DIR/ios/.xcode.env.local"
+  echo "==> Pinned $APP_DIR/ios/.xcode.env.local to $(command -v node) ($(node --version))"
 fi
 
-# 1) Fresh JS bundle → copied into app/targets/watch/assets/bundle.js by build.ts.
+# 1) Fresh JS bundle → copied into the watch target's assets/bundle.js (for
+#    the demo, by build.ts into app/targets/watch/assets/).
 echo "==> Building JS bundle"
-node --experimental-strip-types scripts/build.ts
+sh -c "$JS_BUILD"
 
 # 2) Pick a watchOS simulator: prefer an already-booted one, else first available.
 SIM_ID=${1:-$(
@@ -125,7 +136,7 @@ fi
 # next to the target source (targets/<dir>/) and now writes it under the prebuilt
 # ios/ tree, keyed by PRODUCT name — ios/.targets/<productName>/. That directory
 # is wiped and rewritten by every `expo prebuild`, so run prebuild before this.
-ENT_DIR="$ROOT/app/ios/.targets"
+ENT_DIR="$APP_DIR/ios/.targets"
 TMPENT=$(mktemp -d)
 sim_entitlements() {  # $1 = source generated.entitlements, $2 = out path
   cp "$1" "$2"
@@ -146,10 +157,10 @@ for candidate in "$APP/PlugIns/"*.appex; do
   break
 done
 if [ -n "${APPEX:-}" ]; then
-  sim_entitlements "$ENT_DIR/ReactWatchWidgets/generated.entitlements" "$TMPENT/widget.ent"
+  sim_entitlements "$ENT_DIR/$WIDGET_PRODUCT/generated.entitlements" "$TMPENT/widget.ent"
   codesign --force --sign - --entitlements "$TMPENT/widget.ent" "$APPEX"
 fi
-sim_entitlements "$ENT_DIR/ReactWatch/generated.entitlements" "$TMPENT/watch.ent"
+sim_entitlements "$ENT_DIR/$WATCH_PRODUCT/generated.entitlements" "$TMPENT/watch.ent"
 codesign --force --sign - --entitlements "$TMPENT/watch.ent" "$APP"
 
 # Assert the group actually made it in — a silent miss here is the whole bug.

@@ -1,0 +1,22 @@
+{
+  // Typechecks the watch routes, the shared code and the tests: the parts
+  // that consume react-watchos. The phone routes in app/ belong to Expo's own
+  // toolchain (Metro + react-native types).
+  "compilerOptions": {
+    "target": "ES2020",
+    // The test imports react-watchos/build, whose types are the package's
+    // .mts source: they import with .mts extensions and use ES2022 APIs
+    // (Error cause) — the same two settings the repo's tooling tsconfig uses.
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowImportingTsExtensions": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "types": ["node"]
+  },
+  "include": ["watch", "shared", "test"]
+}
