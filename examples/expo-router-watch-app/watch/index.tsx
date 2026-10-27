@@ -6,6 +6,7 @@ export const options = { title: "Router Watch" };
 export default function WatchHome() {
   return (
     <List>
+      <NavigationLink to="/lab" label="Core Lab" />
       <NavigationLink to="/counter" label="Counter" />
       {LISTS.map((list) => (
         <NavigationLink

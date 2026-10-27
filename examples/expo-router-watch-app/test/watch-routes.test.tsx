@@ -20,6 +20,11 @@ import * as NotFound from "../watch/+not-found";
 import * as RootLayout from "../watch/_layout";
 import * as Counter from "../watch/counter";
 import * as Home from "../watch/index";
+import * as LabControls from "../watch/lab/controls";
+import * as LabDialogs from "../watch/lab/dialogs";
+import * as LabGestures from "../watch/lab/gestures";
+import * as LabIndex from "../watch/lab/index";
+import * as LabText from "../watch/lab/text";
 import * as ListsLayout from "../watch/lists/_layout";
 import * as List from "../watch/lists/[id]";
 
@@ -30,6 +35,11 @@ const screens: Record<string, WatchScreenModule> = {
   "counter.tsx": Counter,
   "lists/[id].tsx": List,
   "(settings)/about.tsx": About,
+  "lab/index.tsx": LabIndex,
+  "lab/text.tsx": LabText,
+  "lab/controls.tsx": LabControls,
+  "lab/dialogs.tsx": LabDialogs,
+  "lab/gestures.tsx": LabGestures,
 };
 const layouts: Record<string, WatchLayoutModule> = {
   "_layout.tsx": RootLayout,
@@ -46,8 +56,17 @@ describe("watch/ routes", () => {
       "/",
       "/about",
       "/counter",
+      "/lab",
+      "/lab/controls",
+      "/lab/dialogs",
+      "/lab/gestures",
+      "/lab/text",
       "/lists/[id]",
     ]);
+    // lab/_kit.tsx is a helper, not a route.
+    expect(table.routes.some((route) => route.file.includes("_kit"))).toBe(
+      false,
+    );
     expect(table.rootLayout).toBe("_layout.tsx");
     expect(table.notFound).toBe("+not-found.tsx");
     expect(
@@ -82,7 +101,7 @@ describe("watch/ routes", () => {
     if (!stack) throw new Error("no stack");
     expect(
       findByType(latest(), "NavigationLink").map((link) => link.props.label),
-    ).toEqual(["Counter", "Day hike", "Gym", "About", "Broken link"]);
+    ).toEqual(["Core Lab", "Counter", "Day hike", "Gym", "About", "Broken link"]);
 
     let seq = 0;
     const go = (path: string[]) =>
