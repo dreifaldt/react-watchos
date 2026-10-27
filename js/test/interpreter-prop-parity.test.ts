@@ -371,7 +371,7 @@ describe("interpreter per-prop parity (M6-interim golden)", () => {
     for (const prop of ["label", "value"]) {
       expect(extracted.DatePicker?.app).toContain(prop);
     }
-    for (const prop of ["placeholder"]) {
+    for (const prop of ["placeholder", "autoCorrect", "autoCapitalize"]) {
       expect(extracted.TextField?.app).toContain(prop);
       expect(extracted.SecureField?.app).toContain(prop);
     }

@@ -8,4 +8,4 @@
 
 > `const` **TimerText**: `FC`\<[`TimerTextProps`](../interfaces/TimerTextProps.md)\>
 
-Defined in: [js/src/components.ts:801](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L801)
+Defined in: [js/src/components.ts:814](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L814)

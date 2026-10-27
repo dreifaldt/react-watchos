@@ -206,6 +206,8 @@
   },
   "TextField": {
     "app": [
+      "autoCapitalize",
+      "autoCorrect",
       "autoFocus",
       "placeholder",
       "value"
@@ -217,6 +219,8 @@
   },
   "SecureField": {
     "app": [
+      "autoCapitalize",
+      "autoCorrect",
       "autoFocus",
       "placeholder",
       "value"

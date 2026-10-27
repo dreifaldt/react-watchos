@@ -82,6 +82,29 @@ only — widgets are static snapshots and ignore it.
 
 ***
 
+### autoCapitalize?
+
+> `optional` **autoCapitalize?**: `"none"` \| `"sentences"` \| `"words"` \| `"characters"`
+
+Defined in: [js/src/components.ts:419](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L419)
+
+Keyboard auto-capitalization, as React Native's TextInput names it.
+Omitted = the system's (`"sentences"`). Pass `"none"` for verbatim input.
+
+***
+
+### autoCorrect?
+
+> `optional` **autoCorrect?**: `boolean`
+
+Defined in: [js/src/components.ts:414](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L414)
+
+Keyboard auto-correction. Omitted = the system's (on). Pass `false` for
+anything typed verbatim — a token, username, URL or code — or the watch
+keyboard rewrites it as you type ("lab ok" becomes "Alan ok").
+
+***
+
 ### autoFocus?
 
 > `optional` **autoFocus?**: `boolean`

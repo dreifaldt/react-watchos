@@ -406,6 +406,17 @@ export interface TextFieldProps extends A11yProps, ModifierProps {
    * not a guarantee — the field stays tappable either way.
    */
   autoFocus?: boolean;
+  /**
+   * Keyboard auto-correction. Omitted = the system's (on). Pass `false` for
+   * anything typed verbatim — a token, username, URL or code — or the watch
+   * keyboard rewrites it as you type ("lab ok" becomes "Alan ok").
+   */
+  autoCorrect?: boolean;
+  /**
+   * Keyboard auto-capitalization, as React Native's TextInput names it.
+   * Omitted = the system's (`"sentences"`). Pass `"none"` for verbatim input.
+   */
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
 }
 
 /**
@@ -413,6 +424,8 @@ export interface TextFieldProps extends A11yProps, ModifierProps {
  * — `value`/`placeholder`/`onChange`/`autoFocus` behave the same — but the
  * characters are obscured on screen, and the watchOS secure-entry modal offers
  * no dictation or Scribble (only the on-screen keyboard), by system design.
+ * Secure entry already starts lowercase with no suggestions, so `autoCorrect`
+ * and `autoCapitalize` rarely matter here.
  */
 export type SecureFieldProps = TextFieldProps;
 

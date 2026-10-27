@@ -6,7 +6,7 @@
 
 # Interface: GridRowProps
 
-Defined in: [js/src/components.ts:723](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L723)
+Defined in: [js/src/components.ts:736](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L736)
 
 One row of a <Grid>; each child is a cell.
 
@@ -63,4 +63,4 @@ Defined in: [js/src/components.ts:90](https://github.com/emindeniz99/react-watch
 
 > `optional` **children?**: `ReactNode`
 
-Defined in: [js/src/components.ts:724](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L724)
+Defined in: [js/src/components.ts:737](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L737)

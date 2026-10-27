@@ -1109,8 +1109,25 @@ private struct OptimisticTextField: View {
         )
     }
 
+    /// `autoCapitalize` ("none" | "sentences" | "words" | "characters"); nil
+    /// keeps the system default, as does an unknown value from dynamic JS.
+    private var autocapitalization: TextInputAutocapitalization? {
+        switch node.string("autoCapitalize") {
+        case "none": return .never
+        case "sentences": return .sentences
+        case "words": return .words
+        case "characters": return .characters
+        default: return nil
+        }
+    }
+
     var body: some View {
         field
+            // Both default to the system's behavior; a token, username or URL
+            // field turns them off (`autoCorrect={false} autoCapitalize="none"`),
+            // or the watch keyboard rewrites what was typed.
+            .textInputAutocapitalization(autocapitalization)
+            .autocorrectionDisabled(node.bool("autoCorrect") == false)
             .focused($focused)
             // autoFocus requests focus once the field is in the hierarchy
             // (deferred a tick — focusing in onAppear is too early). On iOS this

@@ -6,7 +6,7 @@
 
 # Interface: GridProps
 
-Defined in: [js/src/components.ts:716](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L716)
+Defined in: [js/src/components.ts:729](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L729)
 
 Aligned rows/columns (SwiftUI `Grid`); children must be <GridRow>.
 
@@ -104,7 +104,7 @@ Colour or gradient behind the content (rounded when cornerRadius is set):
 
 > `optional` **children?**: `ReactNode`
 
-Defined in: [js/src/components.ts:719](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L719)
+Defined in: [js/src/components.ts:732](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L732)
 
 ***
 
@@ -193,7 +193,7 @@ Fixed and/or max dimensions; `"infinity"` = SwiftUI's fill idiom.
 
 > `optional` **horizontalSpacing?**: `number`
 
-Defined in: [js/src/components.ts:717](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L717)
+Defined in: [js/src/components.ts:730](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L730)
 
 ***
 
@@ -259,4 +259,4 @@ Accent color for this subtree's controls (SwiftUI .tint).
 
 > `optional` **verticalSpacing?**: `number`
 
-Defined in: [js/src/components.ts:718](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L718)
+Defined in: [js/src/components.ts:731](https://github.com/emindeniz99/react-watchos/blob/main/js/src/components.ts#L731)
