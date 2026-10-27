@@ -205,24 +205,46 @@
     ]
   },
   "TextField": {
-    "app": [],
+    "app": [
+      "autoFocus",
+      "placeholder",
+      "value"
+    ],
     "widget": [
       "placeholder",
       "value"
     ]
   },
   "SecureField": {
-    "app": [],
+    "app": [
+      "autoFocus",
+      "placeholder",
+      "value"
+    ],
     "widget": [
       "placeholder"
     ]
   },
   "CrownRotation": {
-    "app": [],
+    "app": [
+      "focused",
+      "haptic",
+      "max",
+      "min",
+      "onFocusChange",
+      "step",
+      "value"
+    ],
     "widget": []
   },
   "NavigationStack": {
-    "app": [],
+    "app": [
+      "accessibilityHidden",
+      "accessibilityHint",
+      "accessibilityLabel",
+      "path",
+      "title"
+    ],
     "widget": [
       "accessibilityHidden",
       "accessibilityHint",
@@ -240,11 +262,21 @@
     ]
   },
   "NavigationRoute": {
-    "app": [],
+    "app": [
+      "accessibilityHidden",
+      "accessibilityHint",
+      "accessibilityLabel",
+      "title"
+    ],
     "widget": []
   },
   "Alert": {
-    "app": [],
+    "app": [
+      "message",
+      "onChange",
+      "presented",
+      "title"
+    ],
     "widget": []
   },
   "AlertAction": {
@@ -252,11 +284,19 @@
     "widget": []
   },
   "ConfirmationDialog": {
-    "app": [],
+    "app": [
+      "message",
+      "onChange",
+      "presented",
+      "title"
+    ],
     "widget": []
   },
   "Sheet": {
-    "app": [],
+    "app": [
+      "onChange",
+      "presented"
+    ],
     "widget": []
   },
   "Section": {

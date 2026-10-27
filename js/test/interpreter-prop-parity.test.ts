@@ -137,22 +137,24 @@ function declarationBodies(src: string): Map<string, string> {
   const decl =
     /\b(?:func|var|struct)\s+(\w+)\s*(?:\([^)]*\))?\s*(?::[^={\n]+?)?\s*(?:->[^{\n]+?)?\s*\{/g;
   for (const m of src.matchAll(decl)) {
-    // Only ViewModifier structs — expanding `View` structs would fold
-    // NodeView itself (i.e. every case) into whatever names it.
-    if (
-      (m[0] as string).startsWith("struct") &&
-      !/\bViewModifier\b/.test(m[0] as string)
-    ) {
-      continue;
-    }
     const open = (m.index as number) + (m[0] as string).length - 1;
     let depth = 0;
     for (let i = open; i < src.length; i++) {
       if (src[i] === "{") depth++;
       else if (src[i] === "}" && --depth === 0) {
+        const body = src.slice(open + 1, i);
+        // `View` structs are followed too: a case that delegates to one
+        // (`case "DatePicker": DatePickerNode(...)`, `case "TextField":
+        // OptimisticTextField(...)`) reads its props there. Except the
+        // interpreter's own dispatching view — expanding it would fold every
+        // case into whatever names it.
+        const dispatcher =
+          (m[0] as string).startsWith("struct") &&
+          !/\bViewModifier\b/.test(m[0] as string) &&
+          /\bswitch\s+node\.type\b/.test(body);
         // First declaration wins — matches `functionBody`'s "first match".
-        if (!out.has(m[1] as string)) {
-          out.set(m[1] as string, src.slice(open + 1, i));
+        if (!dispatcher && !out.has(m[1] as string)) {
+          out.set(m[1] as string, body);
         }
         break;
       }
@@ -182,9 +184,43 @@ function readsWithHelpers(
   return reads;
 }
 
+/**
+ * Swift source with comments blanked out (newlines kept, so positions and
+ * line counts don't move). A comment can name a helper — CrownRotationView's
+ * doc comment mentions OptimisticTextField — and the helper walk follows any
+ * word that matches a declaration, so without this a comment folds another
+ * component's reads into the one it sits in. String literals are skipped
+ * whole: `"http://127.0.0.1"` is not a comment.
+ */
+function stripComments(src: string): string {
+  let out = "";
+  let i = 0;
+  while (i < src.length) {
+    const c = src[i];
+    if (c === '"') {
+      const start = i++;
+      while (i < src.length && src[i] !== '"' && src[i] !== "\n") {
+        i += src[i] === "\\" ? 2 : 1;
+      }
+      out += src.slice(start, ++i);
+    } else if (c === "/" && src[i + 1] === "/") {
+      while (i < src.length && src[i] !== "\n") i++;
+    } else if (c === "/" && src[i + 1] === "*") {
+      const end = src.indexOf("*/", i + 2);
+      const stop = end === -1 ? src.length : end + 2;
+      out += src.slice(i, stop).replace(/[^\n]/g, " ");
+      i = stop;
+    } else {
+      out += c;
+      i++;
+    }
+  }
+  return out;
+}
+
 /** Per-component prop reads extracted from one interpreter source. */
 function propReads(file: string, dispatch: string): Record<string, string[]> {
-  const src = readFileSync(file, "utf8");
+  const src = stripComments(readFileSync(file, "utf8"));
   const decls = declarationBodies(src);
   // Every `case … :` label (component blocks end at ANY sibling label or
   // `default:` — nested value-switches inside a body are rare in the
@@ -323,6 +359,21 @@ describe("interpreter per-prop parity (M6-interim golden)", () => {
           "NodeView.body — the scan must follow `.modifier(T(...))` by type, " +
           "not just named helpers",
       ).toContain(prop);
+    }
+  });
+
+  // The fourth widening (2026-10-27): these props are read only inside a
+  // `View` struct a case delegates to — DatePicker's in DatePickerNode, which
+  // moved them out of the case when the picker took its own @State, and
+  // TextField's in OptimisticTextField, which the scan never saw. Pinned by
+  // NAME for the same reason as above.
+  it("sees props read only inside a View struct a case delegates to", () => {
+    for (const prop of ["label", "value"]) {
+      expect(extracted.DatePicker?.app).toContain(prop);
+    }
+    for (const prop of ["placeholder"]) {
+      expect(extracted.TextField?.app).toContain(prop);
+      expect(extracted.SecureField?.app).toContain(prop);
     }
   });
 

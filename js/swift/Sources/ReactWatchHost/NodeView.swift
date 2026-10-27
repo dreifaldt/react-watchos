@@ -285,11 +285,7 @@ struct NodeView: View {
                 step: node.double("step") ?? 1
             ) { Text(node.string("label") ?? "") }
         case "DatePicker":
-            DatePicker(
-                node.string("label") ?? "",
-                selection: dateBinding,
-                displayedComponents: dateComponents(node.string("mode"))
-            )
+            DatePickerNode(node: node, components: dateComponents(node.string("mode")))
         case "Map":
             mapView
         default:
@@ -654,25 +650,6 @@ struct NodeView: View {
                     + "the contract is date / hourAndMinute / dateAndTime")
             return [.date, .hourAndMinute]
         }
-    }
-
-    /// Optimistic Date binding: value/onChange cross the bridge as epoch ms.
-    private var dateBinding: Binding<Date> {
-        Binding(
-            get: {
-                let ms = model.optimisticDouble(node.id) ?? (node.double("value") ?? 0)
-                // Same clamp as TimerText's `since`: a wire value is any finite
-                // Double, and a Date past distantFuture handed to the picker's
-                // calendar math is a trap, not a date.
-                return RNStyle.timerStart(sinceMs: ms)
-            },
-            set: { newDate in
-                let ms = newDate.timeIntervalSince1970 * 1000
-                model.dispatchOptimistic(
-                    nodeId: node.id, value: .number(ms), payload: ["value": ms]
-                )
-            }
-        )
     }
 
     /// Optimistic Double binding shared by Slider and Stepper.
@@ -1152,6 +1129,76 @@ private struct OptimisticTextField: View {
             SecureField(placeholder, text: textBinding)
         } else {
             TextField(placeholder, text: textBinding)
+        }
+    }
+}
+
+/// A DatePicker over its own @State. Binding the picker straight to the model
+/// — a fresh Binding every render, reading the optimistic value — let watchOS's
+/// composite hour/minute picker write a stale copy of the date back after each
+/// change, and every write re-rendered the other half: the selection flipped
+/// between the old and new time ~60 times a second until the app was killed.
+/// The picker now owns its selection: JS hears only changes the wearer made,
+/// and a new `value` from JS re-seeds it. Values cross the bridge as epoch ms.
+///
+/// The picker's parts also disagree over fields it doesn't display: seeded
+/// with `Date()` (which carries the current seconds) and then the JS value
+/// (whole minutes), the hour/minute picker tugged between the two the moment
+/// it appeared. So the state is seeded from JS when the view is created, and
+/// a value within a millisecond of the agreed one is the same value — the
+/// ms → Date → ms round trip isn't exact in floating point.
+///
+/// Those parts also don't re-read the binding when it changes from outside:
+/// a new `value` from JS updated the selection but the picker kept showing
+/// the old time. A JS seed therefore rebuilds the picker (`.id(seed)`), which
+/// starts every part from the new value; the wearer's own edits never do.
+private struct DatePickerNode: View {
+    let node: RNNode
+    let components: DatePickerComponents
+    @Environment(ReactWatchModel.self) private var model
+    @State private var selection: Date
+    /// The epoch ms both sides agree on: the last value seeded from JS or
+    /// sent to it. A selection equal to it is our own seed, not a change.
+    @State private var agreed: Double
+    /// Bumped on every JS seed, to rebuild the picker around the new value.
+    @State private var seed = 0
+
+    init(node: RNNode, components: DatePickerComponents) {
+        self.node = node
+        self.components = components
+        let value = node.double("value") ?? 0
+        _selection = State(initialValue: Self.date(fromMs: value))
+        _agreed = State(initialValue: value)
+    }
+
+    /// Same clamp as TimerText's `since`: a wire value is any finite Double,
+    /// and a Date past distantFuture handed to the picker's calendar math is
+    /// a trap, not a date.
+    private static func date(fromMs ms: Double) -> Date {
+        RNStyle.timerStart(sinceMs: ms)
+    }
+
+    private func isAgreed(_ ms: Double) -> Bool { abs(ms - agreed) < 1 }
+
+    private var jsValue: Double { node.double("value") ?? 0 }
+
+    var body: some View {
+        DatePicker(
+            node.string("label") ?? "", selection: $selection,
+            displayedComponents: components
+        )
+        .id(seed)
+        .onChange(of: jsValue) { _, value in
+            guard !isAgreed(value) else { return }
+            agreed = value
+            selection = Self.date(fromMs: value)
+            seed += 1
+        }
+        .onChange(of: selection) { _, date in
+            let ms = date.timeIntervalSince1970 * 1000
+            guard !isAgreed(ms) else { return }
+            agreed = ms
+            model.dispatch(nodeId: node.id, event: "change", payload: ["value": ms])
         }
     }
 }
