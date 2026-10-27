@@ -62,6 +62,17 @@ export {
   symbolTargetDir,
   writeSymbolEntry,
 } from "./symbol-store.mts";
+export {
+  generateWatchRoutesEntry,
+  routePathOf,
+  routesFromFiles,
+  scanWatchRoutes,
+  WATCH_ROUTES_ENTRY,
+  type WatchRouteFile,
+  type WatchRoutesPluginOptions,
+  type WatchRouteTable,
+  watchRoutesPlugin,
+} from "./watch-routes.mts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 

@@ -367,6 +367,15 @@ export {
 } from "./remotePush";
 export { type DispatchResult, WatchRoot } from "./renderer";
 export type {
+  WatchLayoutModule,
+  WatchLayoutProps,
+  WatchRouteOptions,
+  WatchRouterProps,
+  WatchRouterRoute,
+  WatchScreenModule,
+} from "./router";
+export { NOT_FOUND_ROUTE, WatchRouter } from "./router";
+export type {
   HeartRateOptions,
   LocationOptions,
   MotionOptions,

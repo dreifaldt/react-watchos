@@ -38,6 +38,29 @@ const { parseArgs } = require("node:util");
 // node_modules leads nowhere.
 const DOCS = "https://github.com/emindeniz99/react-watchos/blob/main/docs";
 
+/** What a build/dev bundles: a hand-written entry or a routes folder. */
+type EntrySource =
+  | { kind: "entry"; entry: string }
+  | { kind: "routes"; dir: string };
+
+function isDirectory(dir: string): boolean {
+  return fs.statSync(dir, { throwIfNoEntry: false })?.isDirectory() === true;
+}
+
+/** The esbuild entry + plugins for a source: a routes folder becomes the
+ *  plugin's generated entry. */
+async function resolveEntry(source: EntrySource) {
+  if (source.kind === "entry") return { entry: source.entry, plugins: [] };
+  const { WATCH_ROUTES_ENTRY, watchRoutesPlugin } = await import(
+    "../esbuild/preset.mts"
+  );
+  console.log(`[react-watchos] file-based routes from ${source.dir}/`);
+  return {
+    entry: WATCH_ROUTES_ENTRY,
+    plugins: [watchRoutesPlugin({ dir: source.dir })],
+  };
+}
+
 /**
  * Parse the shared build/dev flags.
  */
@@ -46,6 +69,7 @@ function buildFlags(args: string[]) {
     args,
     options: {
       entry: { type: "string" },
+      routes: { type: "string" },
       outfile: { type: "string", default: path.join("dist", "bundle.js") },
       asset: { type: "string" },
       // `build` ships, so it minifies by default (see the preset's `minify`
@@ -94,17 +118,28 @@ function buildFlags(args: string[]) {
       debug: { type: "boolean" },
     },
   });
-  if (!values.entry) {
+  // `--routes <dir>` builds file-based routes (esbuild/watch-routes.mts) in
+  // place of a hand-written entry. With neither flag, a `watch/` folder beside
+  // Expo Router's `app/` is picked up by convention.
+  if (values.entry && values.routes) {
+    console.error("[react-watchos] pass --entry or --routes, not both");
+    process.exit(1);
+  }
+  const routes =
+    values.routes ?? (!values.entry && isDirectory("watch") ? "watch" : "");
+  if (!values.entry && !routes) {
     console.error(
-      "[react-watchos] --entry is required (your watch JS entry, e.g. watch-ui/entry.tsx)",
+      "[react-watchos] --entry or --routes is required (your watch JS " +
+        "entry, e.g. watch-ui/entry.tsx, or a routes folder such as watch/)",
     );
     process.exit(1);
   }
-  // Re-spread so the narrowed `entry: string` (the exit above is `never`)
-  // reaches the callers' types, not the optional parseArgs shape.
+  const source: EntrySource = routes
+    ? { kind: "routes", dir: routes }
+    : { kind: "entry", entry: values.entry ?? "" };
   return {
     ...values,
-    entry: values.entry,
+    source,
     // `--no-minify` beats `--minify` whatever the order, so the escape hatch
     // stays reachable when it is appended to a wrapper script's fixed argv.
     minify: !values["no-minify"],
@@ -125,10 +160,12 @@ async function build(args: string[]) {
     process.exit(1);
   }
   const { buildBundles } = await import("../esbuild/preset.mts");
+  const { entry, plugins } = await resolveEntry(f.source);
   const results = await buildBundles(
     [
       {
-        entry: f.entry,
+        entry,
+        plugins,
         outfile: f.outfile,
         name: "app",
         manifest: { version: Number(f.version) },
@@ -185,13 +222,15 @@ async function dev(args: string[]) {
     throw err;
   }
   const { watchBuildOptions } = await import("../esbuild/preset.mts");
+  const { entry, plugins } = await resolveEntry(f.source);
   const ctx = await context(
     // Stated, not inherited: the live-reload bundle is the one you read stack
     // traces out of, so its readability is this call site's contract and not a
     // default that could follow `buildBundles` the next time shipping wins an
     // argument. `build` (which ships) minifies; `dev` does not.
     watchBuildOptions({
-      entry: f.entry,
+      entry,
+      plugins,
       outfile: f.outfile,
       minify: false,
       sourcemap: f.sourcemap,
@@ -373,12 +412,15 @@ switch (command) {
         "      targets/watch/WatchApp.swift, plus targets/widget/ReactWidgets.swift\n" +
         "      when the widget target is enabled. Then run `expo prebuild` — the\n" +
         "      plugin links the SwiftPM packages + merges the Info.plists.\n\n" +
-        "  react-watchos build --entry <file> [--outfile dist/bundle.js]\n" +
+        "  react-watchos build [--entry <file> | --routes <dir>]\n" +
+        "                      [--outfile dist/bundle.js]\n" +
         "                      [--asset <copy-to>] [--no-minify] [--version <n>]\n" +
         "                      [--no-sourcemap] [--keep-names] [--no-network]\n" +
         "                      [--symbols <dir>]\n" +
         "      One-shot QuickJS-correct bundle build (published esbuild preset)\n" +
-        "      + OTA manifest stamp next to the outfile. Minified by default\n" +
+        "      + OTA manifest stamp next to the outfile. --routes builds\n" +
+        "      file-based routes (Expo Router conventions) from a folder; with\n" +
+        "      neither flag a ./watch folder is used. Minified by default\n" +
         "      (~-68% bytes, a third less QuickJS heap); --no-minify keeps the\n" +
         "      component names in stack traces at that cost. A source map is\n" +
         "      written beside the outfile by default and referenced from\n" +
@@ -401,7 +443,8 @@ switch (command) {
         "      --diagnostics reads a whole diagnostics ring and resolves each\n" +
         "      record against its own releaseId. Frames with no mapping are\n" +
         "      printed through unchanged, never dropped.\n\n" +
-        "  react-watchos dev --entry <file> [--outfile dist/bundle.js]\n" +
+        "  react-watchos dev [--entry <file> | --routes <dir>]\n" +
+        "                    [--outfile dist/bundle.js]\n" +
         "                    [--host 127.0.0.1] [--port 8788]\n" +
         "      Live-reload server. DEBUG watch builds poll /bundle.js every 2s\n" +
         "      and hot-restart on change (override the polled URL with the\n" +
